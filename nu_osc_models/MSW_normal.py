@@ -1,10 +1,10 @@
 import nu_osc_model
-from .. import sn_spectra
+from ..sn_spectra import SNspectra
 
 class MSW_normal(nu_osc_model):
     """Neutrino oscillationi class of the MSW effect with the normal hierarchy"""
 
-    def __init__(self, SNspectra:sn_spectra):
+    def __init__(self, sn_spectra:SNspectra):
 
         p = 0.69
 

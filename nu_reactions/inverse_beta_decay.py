@@ -1,4 +1,4 @@
-import nu_reaction
+from nu_reaction import nu_reaction
 import numpy as np
 
 class inverse_beta_decay(nu_reaction):
@@ -20,6 +20,18 @@ class inverse_beta_decay(nu_reaction):
         self.__alpha = 1.0e0 / 137.036e0
         self.__mpi = 139.0e0
 
+
+
+    def dcs_nue(self, dsigmadE:float, Enu:float, E_target:float) -> float:
+        pass
+
+
+    def dcs_cos_nue(self, dcs:float, Enu:float, cos:float) -> float:
+        pass
+
+
+    def cs_nue(self, dcs:float, Enu:float, cos:float) -> float:
+        pass
 
     def dcs_anue(self, Enu, E_target) -> float:
             
@@ -81,10 +93,51 @@ class inverse_beta_decay(nu_reaction):
         Ee = ((Enu-d)*(1.0e0+e)+e*cos*root)/k
         pe = np.sqrt(Ee**2 - self.__me**2)
 
-        dcs_dE = self.dcs(dcs_dE, Enu, Ee)
+        dcs_dE = self.dcs_anue(Enu, Ee)
 
         dcs_cos = pe*e/(1.0e0 + e*(1.0e0 - Ee/pe*cos))*dcs_dE
         return dcs_cos
 
-    def cs_anue(self, dcs, Enu, cos) -> float:
+
+    def cs_anue(self, Enu) -> float:
+        cs = 0
+
+        n=1000
+        cos_list = np.linspace(-1.0,1.0,n)
+        for cos1, cos2 in zip(cos_list[:-1], cos_list[1:]):
+            dcs_cos1 = self.dcs_cos_anue(Enu, cos1)
+            dcs_cos2 = self.dcs_cos_anue(Enu, cos2)        
+            cs += 0.5*(dcs_cos1 + dcs_cos2)*(cos2 - cos1)
+
+        return cs
+
+
+    def cs_table_anue(self, n_cos:int=200, n_e:int=300, E_min:float=0.0, E_max:float=300) -> list[np.array]:
+        csdE = np.empty(n_e)
+        dcsdEdcos = np.empty(n_e, n_cos)
+
+        energy_list = np.linspace(E_min, E_max, n_e)
+        cos_list = np.linspace(-1.0, 1.0, n_cos)
+
+        for i, energy in enumerate(energy_list):
+            csdE[i] = self.cs_anue(energy)
+            for j, cos in enumerate(cos_list):
+                pass
+
+
+
+    def dcs_nux(self, dsigmadE:float, Enu:float, E_target:float) -> float:
         pass
+
+
+    def dcs_cos_nux(self, dcs:float, Enu:float, cos:float) -> float:
+        pass
+
+
+    def cs_nux(self, dcs:float, Enu:float, cos:float) -> float:
+        pass
+    
+
+if __name__ == "__main__":
+    ibd = inverse_beta_decay()
+    print(ibd.cs_anue(20))

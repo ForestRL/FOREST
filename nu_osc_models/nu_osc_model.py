@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 from .. import sn_spectra
 
-class NeutrinoOscillation(ABC):
+class nu_osc_model(ABC):
     """Abstract class for calculating neutrino oscillation"""
 
     def __init__(self, SNspectra:sn_spectra):
