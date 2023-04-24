@@ -1,14 +1,17 @@
-from abc import abstractmethod, ABC
-from .. import sn_spectra
+import sys
+sys.path.append("../")
+from abc import ABCMeta, abstractmethod, ABC
+from sn_spectra import SNspectra
 
-class nu_osc_model(ABC):
+class nu_osc_model(metaclass=ABCMeta):
     """Abstract class for calculating neutrino oscillation"""
 
-    def __init__(self, SNspectra:sn_spectra):
+    def __init__(self, sn_spectra:SNspectra):
         pass
 
     @abstractmethod
-    def get_sn_spectra(self):
+    def get_sn_spectra(self) -> SNspectra:
+        """Returns SNspectra class"""
         pass
 
     @abstractmethod
@@ -65,14 +68,26 @@ class nu_osc_model(ABC):
 
     @abstractmethod
     def get_number_spectra_nue(self):
+        """ returns the array of nue_number_spectra.
+            return:
+                   numpy array
+        """
         pass
 
     @abstractmethod
     def get_number_spectra_anue(self):
+        """ returns the array of anue_number_spectra.
+            return:
+                   numpy array                   
+        """
         pass
 
     @abstractmethod
     def get_number_spectra_nux(self):
+        """ returns the array of nux_number_spectra.
+            return:
+                   numpy array        
+        """
         pass
 
     @abstractmethod

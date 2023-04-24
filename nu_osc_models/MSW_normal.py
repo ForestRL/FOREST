@@ -1,5 +1,7 @@
-import nu_osc_model
-from ..sn_spectra import SNspectra
+import sys
+sys.path.append("../")
+from nu_osc_model import nu_osc_model
+from sn_spectra import SNspectra
 
 class MSW_normal(nu_osc_model):
     """Neutrino oscillationi class of the MSW effect with the normal hierarchy"""

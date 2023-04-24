@@ -21,17 +21,19 @@ class inverse_beta_decay(nu_reaction):
         self.__mpi = 139.0e0
 
 
+    def get_reaction_name(self) -> str:
+        return "ibd_vissani"
 
-    def dcs_nue(self, dsigmadE:float, Enu:float, E_target:float) -> float:
-        pass
-
-
-    def dcs_cos_nue(self, dcs:float, Enu:float, cos:float) -> float:
-        pass
+    def dcs_nue(self, Enu:float, E_target:float) -> float:
+        return 0.0
 
 
-    def cs_nue(self, dcs:float, Enu:float, cos:float) -> float:
-        pass
+    def dcs_cos_nue(self, Enu:float, cos:float) -> float:
+        return 0.0
+
+
+    def cs_nue(self, Enu:float) -> float:
+        return 0.0
 
     def dcs_anue(self, Enu, E_target) -> float:
             
@@ -99,7 +101,7 @@ class inverse_beta_decay(nu_reaction):
         return dcs_cos
 
 
-    def cs_anue(self, Enu) -> float:
+    def cs_anue(self, Enu:float) -> float:
         cs = 0
 
         n=1000
@@ -126,16 +128,16 @@ class inverse_beta_decay(nu_reaction):
 
 
 
-    def dcs_nux(self, dsigmadE:float, Enu:float, E_target:float) -> float:
-        pass
+    def dcs_nux(self, Enu:float, E_target:float) -> float:
+        return 0.0
 
 
-    def dcs_cos_nux(self, dcs:float, Enu:float, cos:float) -> float:
-        pass
+    def dcs_cos_nux(self, Enu:float, cos:float) -> float:
+        return 0.0
 
 
-    def cs_nux(self, dcs:float, Enu:float, cos:float) -> float:
-        pass
+    def cs_nux(self, Enu:float) -> float:
+        return 0.0
     
 
 if __name__ == "__main__":
