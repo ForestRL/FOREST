@@ -1,6 +1,7 @@
 from nu_reaction import nu_reaction
 import numpy as np
 
+
 class inverse_beta_decay(nu_reaction):
     """ Inverse beta decay cross-section given by Strumia and Vissani"""
     def __init__(self):
@@ -24,26 +25,26 @@ class inverse_beta_decay(nu_reaction):
     def get_reaction_name(self) -> str:
         return "ibd_vissani"
 
-    def dcs_nue(self, Enu:float, E_target:float) -> float:
+    def dcs_nue(self, Enu, E_target) -> float:
         return 0.0
 
 
-    def dcs_cos_nue(self, Enu:float, cos:float) -> float:
+    def dcs_cos_nue(self, Enu, cos):
         return 0.0
 
 
-    def cs_nue(self, Enu:float) -> float:
-        return 0.0
+    def cs_nue(self, Enu):
+        return np.zeros(Enu.shape)
 
-    def dcs_anue(self, Enu, E_target) -> float:
-            
+
+    def dcs_anue(self, Enu, E_target):
+
+        dcsdE = np.zeros(Enu.shape, dtype=np.float_)
+
         Eth = ((self.__mn + self.__me)**2 - self.__mp**2)/2.0e0/self.__mp
 
-        if(Enu < Eth):
-            dsigmadE = 0.0e0
-            return 0.0
 
-        s = self.__mp**2 + 2*self.__mp*Enu
+        s =  np.where(Enu > Eth, self.__mp**2 + 2*self.__mp*Enu, self.__mp**2 + 2*self.__mp*Eth)
         u = -(-s + 2*self.__mp*(Enu + E_target) - self.__me**2)
         t = self.__mn**2 - self.__mp**2 - 2.0e0*self.__mp*(Enu - E_target)
 
@@ -73,44 +74,47 @@ class inverse_beta_decay(nu_reaction):
 
         dsigmadt = self.__GF**2*self.__costhetac**2/(2*np.pi*(s - self.__mp**2)**2)*Matrix
         dsigmadE0 = 2*self.__mp*dsigmadt*(self.__hbar*self.__c)**2
+        dcsdE = np.where((E_target > 0.0), dsigmadE0\
+        *(1.0e0+self.__alpha/np.pi*(6.0e0+1.5e0*np.log(0.5e0*self.__mp/np.abs(E_target)) + 1.2e0*np.sqrt((self.__me/np.abs(E_target))**3)))\
+        ,0.0)
 
-        dsigmadE = dsigmadE0\
-        *(1.0e0+self.__alpha/np.pi*(6.0e0+1.5e0*np.log(0.5e0*self.__mp/E_target) + 1.2e0*np.sqrt((self.__me/E_target)**3)))
-
-        return dsigmadE
+        dcsdE = np.where(Enu > Eth,dcsdE, 0.0)
+        return dcsdE
 
 
-    def dcs_cos_anue(self, Enu, cos) -> float:
-        e = Enu/self.__mp
-        k = (1.0e0 + e)**2 - (e*cos)**2
+    def dcs_cos_anue(self, Enu, cos):
+        Enu_3d = np.tile(Enu, (len(cos), 1, 1))
+        cos_new = np.reshape(cos, (len(cos),1,1))
+
+        e = Enu_3d/self.__mp
+        k = (1.0e0 + e)**2 - (e*cos_new)**2
         d = (self.__mn**2 - self.__mp**2 - self.__me**2)/2.0e0/self.__mp
 
-        root2 = (Enu-d)**2 - self.__me**2*k
-        if(root2 < 0.0):
-            dcs_cos = 0.0
-            return dcs_cos
-        
-        root = np.sqrt(root2)
+        root2 = (Enu_3d-d)**2 - self.__me**2*k
+        root2_new = np.where(root2 > 0.0, root2, 0.0)
 
-        Ee = ((Enu-d)*(1.0e0+e)+e*cos*root)/k
-        pe = np.sqrt(Ee**2 - self.__me**2)
+        root = np.sqrt(root2_new)
 
-        dcs_dE = self.dcs_anue(Enu, Ee)
+        Ee = ((Enu_3d-d)*(1.0e0+e)+e*cos_new*root)/k
+        pe = np.sqrt(np.abs(Ee**2 - self.__me**2))
 
-        dcs_cos = pe*e/(1.0e0 + e*(1.0e0 - Ee/pe*cos))*dcs_dE
+        dcs_dE = self.dcs_anue_np(Enu, Ee)
+
+        dcs_cos = pe*e/(1.0e0 + e*(1.0e0 - Ee/pe*cos_new))*dcs_dE
+        dcs_cos = np.where(root2 < 0.0, 0.0, dcs_cos)
         return dcs_cos
 
 
-    def cs_anue(self, Enu:float) -> float:
-        cs = 0
+    def cs_anue_np(self, Enu):
 
         n=1000
         cos_list = np.linspace(-1.0,1.0,n)
-        for cos1, cos2 in zip(cos_list[:-1], cos_list[1:]):
-            dcs_cos1 = self.dcs_cos_anue(Enu, cos1)
-            dcs_cos2 = self.dcs_cos_anue(Enu, cos2)        
-            cs += 0.5*(dcs_cos1 + dcs_cos2)*(cos2 - cos1)
+        cos1 = cos_list[:-1]
+        cos2 = cos_list[1:]
+        dcs_cos1 = self.dcs_cos_anue_np(Enu, cos1)
+        dcs_cos2 = self.dcs_cos_anue_np(Enu, cos2)
 
+        cs = np.sum(0.5*(dcs_cos1 + dcs_cos2)*(cos2[:,None,None] - cos1[:,None,None]), axis=0)
         return cs
 
 
@@ -133,11 +137,11 @@ class inverse_beta_decay(nu_reaction):
 
 
     def dcs_cos_nux(self, Enu:float, cos:float) -> float:
-        return 0.0
+        return 
 
 
-    def cs_nux(self, Enu:float) -> float:
-        return 0.0
+    def cs_nux(self, Enu):
+        return np.zeros(Enu.shape)
     
 
 if __name__ == "__main__":

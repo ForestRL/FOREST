@@ -191,15 +191,25 @@ class SNspectra:
         """
 
         return self.__times
+    
+
+    def get_distance(self) -> float:
+        """ returns the distance of the SN from earth.
+            return:
+                   distance (kpc)
+        """
+        return self.__distance
 
 
-    def  __init__(self, spectrum_file: str):
+    def  __init__(self, spectrum_file: str, distance:float=10.0):
         """initializes the sn_spectrum class.
             loads sn spectrum file.
 
             arg:
                 spectrum_file path
         """
+
+        self.__distance = distance 
 
         self.__times = np.empty((0)) # array of Tn
         self.__n_ene_bin = 20 # number of energy bins
