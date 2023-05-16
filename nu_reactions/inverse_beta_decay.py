@@ -30,7 +30,7 @@ class inverse_beta_decay(nu_reaction):
 
 
     def dcs_cos_nue(self, Enu, cos):
-        return 0.0
+        return np.zeros((len(cos), len(Enu[:,0]), len(Enu[:,1])))
 
 
     def cs_nue(self, Enu):
@@ -98,21 +98,21 @@ class inverse_beta_decay(nu_reaction):
         Ee = ((Enu_3d-d)*(1.0e0+e)+e*cos_new*root)/k
         pe = np.sqrt(np.abs(Ee**2 - self.__me**2))
 
-        dcs_dE = self.dcs_anue_np(Enu, Ee)
+        dcs_dE = self.dcs_anue(Enu, Ee)
 
         dcs_cos = pe*e/(1.0e0 + e*(1.0e0 - Ee/pe*cos_new))*dcs_dE
         dcs_cos = np.where(root2 < 0.0, 0.0, dcs_cos)
         return dcs_cos
 
 
-    def cs_anue_np(self, Enu):
+    def cs_anue(self, Enu):
 
         n=1000
         cos_list = np.linspace(-1.0,1.0,n)
         cos1 = cos_list[:-1]
         cos2 = cos_list[1:]
-        dcs_cos1 = self.dcs_cos_anue_np(Enu, cos1)
-        dcs_cos2 = self.dcs_cos_anue_np(Enu, cos2)
+        dcs_cos1 = self.dcs_cos_anue(Enu, cos1)
+        dcs_cos2 = self.dcs_cos_anue(Enu, cos2)
 
         cs = np.sum(0.5*(dcs_cos1 + dcs_cos2)*(cos2[:,None,None] - cos1[:,None,None]), axis=0)
         return cs
@@ -136,8 +136,8 @@ class inverse_beta_decay(nu_reaction):
         return 0.0
 
 
-    def dcs_cos_nux(self, Enu:float, cos:float) -> float:
-        return 
+    def dcs_cos_nux(self, Enu, cos) -> float:
+        return np.zeros((len(cos), len(Enu[:,0]), len(Enu[:,1])))
 
 
     def cs_nux(self, Enu):

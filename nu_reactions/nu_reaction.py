@@ -25,18 +25,6 @@ class nu_reaction(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def dcs_anue_np(self, Enu, E_target):
-        pass
-
-    @abstractmethod
-    def dcs_cos_anue_np(self, Enu, cos):
-        pass
-
-    @abstractmethod
-    def cs_anue_np(self, Enu):
-        pass
-
-    @abstractmethod
     def dcs_cos_anue(self, Enu:float, cos:float) -> float:
         pass
 
