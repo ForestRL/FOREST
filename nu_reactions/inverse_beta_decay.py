@@ -39,7 +39,7 @@ class inverse_beta_decay(nu_reaction):
 
     def dcs_anue(self, Enu, E_target):
 
-        dcsdE = np.zeros(Enu.shape, dtype=np.float_)
+        dcsdE = np.zeros(Enu.shape)
 
         Eth = ((self.__mn + self.__me)**2 - self.__mp**2)/2.0e0/self.__mp
 
@@ -64,7 +64,7 @@ class inverse_beta_decay(nu_reaction):
             +0.25e0 *g2**2*(t - self.__me**2)*self.__me**2/self.__M**2\
             +0.5e0*f1*f2*(2.0e0*t - self.__me**2)  +  g1*g2*self.__me**2)\
             - 2.0e0*self.__me**2*self.__M*self.__delta*g1*(f1+f2)
-
+        
         Bt = t*g1*(f1+f2)\
             + 0.25e0*self.__me**2*self.__delta*(f2**2+f1*f2+2.0e0*g1*g2)/self.__M
     
@@ -85,7 +85,7 @@ class inverse_beta_decay(nu_reaction):
     def dcs_cos_anue(self, Enu, cos):
         Enu_3d = np.tile(Enu, (len(cos), 1, 1))
         cos_new = np.reshape(cos, (len(cos),1,1))
-
+        
         e = Enu_3d/self.__mp
         k = (1.0e0 + e)**2 - (e*cos_new)**2
         d = (self.__mn**2 - self.__mp**2 - self.__me**2)/2.0e0/self.__mp
@@ -107,14 +107,14 @@ class inverse_beta_decay(nu_reaction):
 
     def cs_anue(self, Enu):
 
-        n=1000
+        n=1001
         cos_list = np.linspace(-1.0,1.0,n)
         cos1 = cos_list[:-1]
         cos2 = cos_list[1:]
-        dcs_cos1 = self.dcs_cos_anue(Enu, cos1)
-        dcs_cos2 = self.dcs_cos_anue(Enu, cos2)
 
-        cs = np.sum(0.5*(dcs_cos1 + dcs_cos2)*(cos2[:,None,None] - cos1[:,None,None]), axis=0)
+        dcs_cos = self.dcs_cos_anue(Enu, cos_list)
+        
+        cs = np.sum(0.5*(dcs_cos[:-1] + dcs_cos[1:])*(cos2[:,None,None] - cos1[:,None,None]), axis=0)
         return cs
 
 
@@ -131,7 +131,6 @@ class inverse_beta_decay(nu_reaction):
                 pass
 
 
-
     def dcs_nux(self, Enu:float, E_target:float) -> float:
         return 0.0
 
@@ -142,8 +141,20 @@ class inverse_beta_decay(nu_reaction):
 
     def cs_nux(self, Enu):
         return np.zeros(Enu.shape)
+
     
+    def get_PID1(self) -> int:
+        return -11
+
+
+    def get_outgoing_particle_energy(self, cos:float, Enu:float) -> float:
+        epsilon = Enu/self.__mp
+        d = (self.__mn**2 - self.__mp**2 - self.__me**2)/2.0e0/self.__mp
+        kappa = (1 + epsilon)**2 - (epsilon*cos)**2
+        Ee = ((Enu - d)*(1 + epsilon) 
+              + epsilon*cos*np.sqrt((Enu - d)**2 - self.__me**2*kappa))/kappa
+        return Ee
 
 if __name__ == "__main__":
     ibd = inverse_beta_decay()
-    print(ibd.cs_anue(20))
+    print(ibd.cs_anue(np.array((300))))
