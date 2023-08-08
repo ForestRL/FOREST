@@ -6,12 +6,133 @@ sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
 from nu_osc_model import nu_osc_model
 from nu_reaction import nu_reaction
+import tools
 
 class super_kamiokande(detector):
     """Impelement for Super-Kamiokande"""
 
     def __init__(self, nu_osc:nu_osc_model, nu_reactions:list[nu_reaction]):
-        pass
+        self.__height = 41.4
+        self.__diameter = 39.3
+        self.__fv_distance = 2.0
+        self.__n_protons = 2.173e33
+        self.__env_slope = 10
+        self.__env_center = 39.3
+
+        self.__full_volume = np.pi*(self.__diameter/2.0)**2*self.__height
+        self.__top_bottom_volume = np.pi*(self.__diameter/2.0)**2*(2*self.__fv_distance)
+        self.__cylinder_volume = self.__full_volume - np.pi*(self.__diameter/2.0 - self.__fv_distance)**2*self.__height
+        self.__fiducial_volume = np.pi*(self.__diameter/2.0 - self.__fv_distance)**2*(self.__height - 2*self.__fv_distance)
+
+
+        self.__bg_data = np.loadtxt("sk_bg.dat")
+
+        self.__bg_data[:,1:] = np.where(self.__bg_data[:,1:] > 1e-100, self.__bg_data[:,1:], 1e-100)
+#        self.__bg_data[:,3] = np.where(self.__bg_data[:,3] > self.__bg_data[:,1], self.__bg_data[:,1], self.__bg_data[:,3])
+        self.__bin_width = self.__bg_data[1,0] - self.__bg_data[0,0] 
+        self.__bin_lowedges = self.__bg_data[:,0] - self.__bin_width
+        self.__bin_highedges = self.__bg_data[:,0] + self.__bin_width
+
+        self.__r2_outFV = np.linspace((self.__diameter - self.__fv_distance)**2, self.__diameter**2, 200)
+        self.__z_outFV_p = np.linspace( self.__height/2.0-self.__fv_distance, self.__height/2.0, 200)
+
+        self.__make_envelope()
+
+    def __make_envelope(self):
+
+        r_fv2 = (self.__diameter - self.__fv_distance)**2
+        r_wall2 = self.__diameter**2
+        s2 = self.__env_slope**2
+        top_wall = self.__height/2.0
+        top_fv = self.__height/2.0 - self.__fv_distance
+
+        ar2 = 1.0/(s2*(np.exp(r_wall2/s2)-np.exp(r_fv2/s2)))
+        self.__ar2 = ar2
+
+        az = 1.0/(self.__env_slope*(np.exp(top_wall/self.__env_slope)-np.exp(top_fv/self.__env_slope)))
+        self.__az = az
+
+    def __bg_model_func(self, a, x):
+        return a*np.exp(x/self.__env_slope**2)
+
+
+    def generate_bg_in_fv(self, t_start:float, t_end:float):
+        tot_rate = np.sum(self.__bg_data[:,1]*self.__bin_width)*self.__fiducial_volume
+        dn_exp = (t_end - t_start)*tot_rate*100
+        dn = np.random.poisson(dn_exp, 1)
+        times = np.random.rand(dn[0])*(t_end - t_start) + t_start
+        times.sort()
+
+        for t in times:
+            theta = 2*np.pi*np.random.rand()
+            cos = np.cos(theta)
+            sin = np.sin(theta)
+            r = np.sqrt((self.__diameter/2 - self.__fv_distance)**2*np.random.rand())
+            z = (np.random.rand() - 0.5)*self.__height
+            
+            ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
+            print(t, ene, r*cos, r*sin, z)
+
+
+    def generate_bg_out_fv_top_bottom(self, t_start:float, t_end:float):
+        tot_rate = np.sum(self.__bg_data[:,3]*self.__bin_width)*self.__top_bottom_volume
+        dn_exp = (t_end - t_start)*tot_rate
+        dn = np.random.poisson(dn_exp, 1)
+        times = np.random.rand(dn[0])*(t_end - t_start) + t_start
+        times.sort()
+        event_list = []
+
+        for t in times:
+            theta = 2*np.pi*np.random.rand()
+            cos = np.cos(theta)
+            sin = np.sin(theta)
+            r2 = np.random.rand()*self.__diameter**2
+            
+            ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
+            
+            pdf = self.__az*np.exp(self.__z_outFV_p/self.__env_slope)
+            z = tools.get_value_random(self.__r2_outFV, pdf)
+            z *= np.random.choice([1,-1])
+
+            x = np.sqrt(r2)*cos
+            y = np.sqrt(r2)*sin
+
+            phi = 2.0*np.pi*np.random.rand()
+            theta = np.arccos(-2.0*np.random.rand() + 1.0)        
+            event_list.append([t, ene, 0.0, phi, theta, x, y, z, 0])
+            #print(t, ene, x, y, z)
+
+        return event_list
+
+    def generate_bg_out_fv_cylinder(self, t_start:float, t_end:float):
+        tot_rate = np.sum(self.__bg_data[:,3]*self.__bin_width)*self.__cylinder_volume
+        dn_exp = (t_end - t_start)*tot_rate
+        dn = np.random.poisson(dn_exp, 1)
+        
+        times = np.random.rand(dn[0])*(t_end - t_start) + t_start
+        times.sort()
+        event_list = []
+        for t in times:
+            theta = 2*np.pi*np.random.rand()
+            cos = np.cos(theta)
+            sin = np.sin(theta)
+            z = (np.random.rand() - 0.5)*self.__height
+            
+            ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
+            
+            #a = tools.interpolate_1d_array(ene, self.__bg_data[:,0], self.__a)
+            pdf = self.__ar2*np.exp(self.__r2_outFV/self.__env_slope**2)
+            r2 = tools.get_value_random(self.__r2_outFV, pdf)
+
+            x = np.sqrt(r2)*cos
+            y = np.sqrt(r2)*sin
+            phi = 2.0*np.pi*np.random.rand()
+            theta = np.arccos(-2.0*np.random.rand() + 1.0)
+            event_list.append([t, ene, 0.0, theta, phi, x, y, z, 0])
+            #print(t, ene, x, y, z)
+
+        return event_list
+
 
     def set_nu_reaction(self):
         pass
@@ -23,8 +144,8 @@ class super_kamiokande(detector):
     def set_background(self):
         bg_data = np.loadtxt("sk_bg.dat")
         bin_width = bg_data[1,0] - bg_data[0,0] 
-        
-        
+
+
 
         pass
 
@@ -53,6 +174,11 @@ if __name__ == "__main__":
 
     ev_gen = nu_event_generator(nu_osc, [ibd], [2.173e33], 200)
     times = spectra.get_times()
+    sk = super_kamiokande(nu_osc, [ibd])
 
     for time1, time2 in zip(times[1:], times[:-1]):
-        ev_gen.get_events(time2, time1, [ibd.get_reaction_name()])
+        sk.generate_bg_in_fv(time2, time1)
+        sk.generate_bg_out_fv_cylinder(time2,time1)
+        sk.generate_bg_out_fv_top_bottom(time2,time1)
+
+        #ev_gen.get_events(time2, time1, [ibd.get_reaction_name()])
