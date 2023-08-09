@@ -5,13 +5,14 @@ sys.path.append("../")
 sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
 from nu_osc_model import nu_osc_model
-from nu_reaction import nu_reaction
+from nu_reactions.event_generator import event_generator
+from nu_reactions.analytic_generator import analytic_generator
 import tools
 
 class super_kamiokande(detector):
     """Impelement for Super-Kamiokande"""
 
-    def __init__(self, nu_osc:nu_osc_model, nu_reactions:list[nu_reaction]):
+    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator):
         self.__height = 41.4
         self.__diameter = 39.3
         self.__fv_distance = 2.0
@@ -24,6 +25,7 @@ class super_kamiokande(detector):
         self.__cylinder_volume = self.__full_volume - np.pi*(self.__diameter/2.0 - self.__fv_distance)**2*self.__height
         self.__fiducial_volume = np.pi*(self.__diameter/2.0 - self.__fv_distance)**2*(self.__height - 2*self.__fv_distance)
 
+        self.__ev_gen = ev_gen
 
         self.__bg_data = np.loadtxt("sk_bg.dat")
 
@@ -37,6 +39,7 @@ class super_kamiokande(detector):
         self.__z_outFV_p = np.linspace( self.__height/2.0-self.__fv_distance, self.__height/2.0, 200)
 
         self.__make_envelope()
+
 
     def __make_envelope(self):
 
@@ -58,20 +61,27 @@ class super_kamiokande(detector):
 
     def generate_bg_in_fv(self, t_start:float, t_end:float):
         tot_rate = np.sum(self.__bg_data[:,1]*self.__bin_width)*self.__fiducial_volume
-        dn_exp = (t_end - t_start)*tot_rate*100
+        dn_exp = (t_end - t_start)*tot_rate
         dn = np.random.poisson(dn_exp, 1)
         times = np.random.rand(dn[0])*(t_end - t_start) + t_start
         times.sort()
+        event_list = []
 
         for t in times:
             theta = 2*np.pi*np.random.rand()
             cos = np.cos(theta)
             sin = np.sin(theta)
             r = np.sqrt((self.__diameter/2 - self.__fv_distance)**2*np.random.rand())
+            x = r*cos
+            y = r*sin
             z = (np.random.rand() - 0.5)*self.__height
             
             ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
-            print(t, ene, r*cos, r*sin, z)
+            phi = 2.0*np.pi*np.random.rand()
+            theta = np.arccos(-2.0*np.random.rand() + 1.0)        
+            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0})
+            #print(t, ene, r*cos, r*sin, z)
+        return event_list
 
 
     def generate_bg_out_fv_top_bottom(self, t_start:float, t_end:float):
@@ -99,10 +109,11 @@ class super_kamiokande(detector):
 
             phi = 2.0*np.pi*np.random.rand()
             theta = np.arccos(-2.0*np.random.rand() + 1.0)        
-            event_list.append([t, ene, 0.0, phi, theta, x, y, z, 0])
+            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0})
             #print(t, ene, x, y, z)
 
         return event_list
+
 
     def generate_bg_out_fv_cylinder(self, t_start:float, t_end:float):
         tot_rate = np.sum(self.__bg_data[:,3]*self.__bin_width)*self.__cylinder_volume
@@ -128,7 +139,7 @@ class super_kamiokande(detector):
             y = np.sqrt(r2)*sin
             phi = 2.0*np.pi*np.random.rand()
             theta = np.arccos(-2.0*np.random.rand() + 1.0)
-            event_list.append([t, ene, 0.0, theta, phi, x, y, z, 0])
+            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0})
             #print(t, ene, x, y, z)
 
         return event_list
@@ -154,9 +165,19 @@ class super_kamiokande(detector):
         pass
 
 
-    def get_events(self) -> list[float]:
-        pass
+    def get_events(self, t_start:float, t_end:float) -> list[float]:
+        bg_in_fv = self.generate_bg_in_fv(t_start, t_end)
+        bg_out_fv_cylinder = self.generate_bg_out_fv_cylinder(t_start, t_end)
+        bg_out_fv_top_bottom = self.generate_bg_out_fv_top_bottom(t_start, t_end)
+        sn_ev = self.__ev_gen.get_events(t_start, t_end)
 
+        ev_list = []
+        ev_list.extend(bg_in_fv)
+        ev_list.extend(bg_out_fv_cylinder)
+        ev_list.extend(bg_out_fv_top_bottom)
+        ev_list.extend(sn_ev)
+        for ev in ev_list:
+            print(ev["time"], ev["ev_ene"], ev["id"])
 
 if __name__ == "__main__":
     import sys
@@ -168,17 +189,10 @@ if __name__ == "__main__":
     from inverse_beta_decay import inverse_beta_decay
     from nu_event_generator import nu_event_generator
 
-    spectra = SNspectra("../z9.6_ver2_nuspectra_nonzero.dat")
-    nu_osc = MSW_normal(spectra)
-    ibd = inverse_beta_decay()
 
-    ev_gen = nu_event_generator(nu_osc, [ibd], [2.173e33], 200)
-    times = spectra.get_times()
-    sk = super_kamiokande(nu_osc, [ibd])
-
+ #   ev_gen = nu_event_generator(nu_osc, [ibd], [2.173e33], 200)
+    ev_gen_ana = analytic_generator()
+    sk = super_kamiokande(None, ev_gen_ana)
+    times = np.linspace(0.01, 200, 20000)
     for time1, time2 in zip(times[1:], times[:-1]):
-        sk.generate_bg_in_fv(time2, time1)
-        sk.generate_bg_out_fv_cylinder(time2,time1)
-        sk.generate_bg_out_fv_top_bottom(time2,time1)
-
-        #ev_gen.get_events(time2, time1, [ibd.get_reaction_name()])
+        sk.get_events(time2, time1)

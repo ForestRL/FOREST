@@ -4,13 +4,13 @@ sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
 sys.path.append("..")
 from nu_osc_model import nu_osc_model
-from nu_reaction import nu_reaction
+from nu_reactions.event_generator import event_generator
 
 class detector(metaclass=ABCMeta):
     """Abstract class for detectors"""
 
     @abstractmethod
-    def __init__(self, nu_osc:nu_osc_model, nu_reactions:list[nu_reaction]):
+    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator):
         pass
 
 
