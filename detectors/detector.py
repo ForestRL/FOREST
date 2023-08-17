@@ -5,6 +5,7 @@ sys.path.append("../nu_reactions")
 sys.path.append("..")
 from nu_osc_model import nu_osc_model
 from nu_reactions.event_generator import event_generator
+import typing
 
 class detector(metaclass=ABCMeta):
     """Abstract class for detectors"""
@@ -35,6 +36,6 @@ class detector(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def get_events(self) -> list[float]:
+    def get_events(self) -> typing.List[float]:
         pass
 

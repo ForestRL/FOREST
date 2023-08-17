@@ -7,9 +7,10 @@ from nu_reaction import nu_reaction
 import numpy as np
 from numpy import random
 import tools
+import typing
 
 class nu_event_generator:
-    def __init__(self, nu_osc:nu_osc_model, nu_reaction_list:list[nu_reaction], nu_target_list:list[float], n_cos_res:int):
+    def __init__(self, nu_osc:nu_osc_model, nu_reaction_list:typing.List[nu_reaction], nu_target_list:typing.List[float], n_cos_res:int):
 
         self.__kpc_cm = 3.086e21 # 1 kpc in cm
 
@@ -109,7 +110,7 @@ class nu_event_generator:
                 + cum_events[max_i]
 
 
-    def get_events(self, t_start:float, t_end:float, react_names:list[str]=[]):
+    def get_events(self, t_start:float, t_end:float, react_names:typing.List[str]=[]):
         
         for i in range(3):
             tot_start = self.get_tot_events(react_names[0], i, t_start)
