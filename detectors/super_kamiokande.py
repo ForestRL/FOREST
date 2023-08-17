@@ -24,18 +24,19 @@ class super_kamiokande(detector):
         self.__top_bottom_volume = np.pi*(self.__diameter/2.0)**2*(2*self.__fv_distance)
         self.__cylinder_volume = self.__full_volume - np.pi*(self.__diameter/2.0 - self.__fv_distance)**2*self.__height
         self.__fiducial_volume = np.pi*(self.__diameter/2.0 - self.__fv_distance)**2*(self.__height - 2*self.__fv_distance)
+#        self.__top_bottom_midle_volume = np.pi*(self.__diameter/2.0 - self.__fv_distance)**2*(2*self.__fv_distance)
+#        self.__cylinder_midle_volume = np.pi*()
 
         self.__ev_gen = ev_gen
 
         self.__bg_data = np.loadtxt("sk_bg.dat")
 
         self.__bg_data[:,1:] = np.where(self.__bg_data[:,1:] > 1e-100, self.__bg_data[:,1:], 1e-100)
-#        self.__bg_data[:,3] = np.where(self.__bg_data[:,3] > self.__bg_data[:,1], self.__bg_data[:,1], self.__bg_data[:,3])
         self.__bin_width = self.__bg_data[1,0] - self.__bg_data[0,0] 
         self.__bin_lowedges = self.__bg_data[:,0] - self.__bin_width
         self.__bin_highedges = self.__bg_data[:,0] + self.__bin_width
 
-        self.__r2_outFV = np.linspace((self.__diameter - self.__fv_distance)**2, self.__diameter**2, 200)
+        self.__r2_outFV = np.linspace((self.__diameter/2.0 - self.__fv_distance)**2, self.__diameter/2.0**2, 200)
         self.__z_outFV_p = np.linspace( self.__height/2.0-self.__fv_distance, self.__height/2.0, 200)
 
         self.__make_envelope()
@@ -59,6 +60,16 @@ class super_kamiokande(detector):
         return a*np.exp(x/self.__env_slope**2)
 
 
+    def __check_FV(self, x:float, y:float, z:float) -> bool:
+        r = np.sqrt(x*x + y*y)
+
+        if(r < self.__diameter/2 - self.__fv_distance and 
+           np.abs(z) < self.__height/2 - self.__fv_distance):
+            return True
+        else:
+            return False
+
+
     def generate_bg_in_fv(self, t_start:float, t_end:float):
         tot_rate = np.sum(self.__bg_data[:,1]*self.__bin_width)*self.__fiducial_volume
         dn_exp = (t_end - t_start)*tot_rate
@@ -74,12 +85,12 @@ class super_kamiokande(detector):
             r = np.sqrt((self.__diameter/2 - self.__fv_distance)**2*np.random.rand())
             x = r*cos
             y = r*sin
-            z = (np.random.rand() - 0.5)*self.__height
+            z = (np.random.rand() - 0.5)*(self.__height - 2*self.__fv_distance)
             
             ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
             phi = 2.0*np.pi*np.random.rand()
             theta = np.arccos(-2.0*np.random.rand() + 1.0)        
-            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0})
+            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0, "fv":1})
             #print(t, ene, r*cos, r*sin, z)
         return event_list
 
@@ -96,7 +107,7 @@ class super_kamiokande(detector):
             theta = 2*np.pi*np.random.rand()
             cos = np.cos(theta)
             sin = np.sin(theta)
-            r2 = np.random.rand()*self.__diameter**2
+            r2 = np.random.rand()*(self.__diameter/2)**2
             
             ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
             
@@ -109,7 +120,7 @@ class super_kamiokande(detector):
 
             phi = 2.0*np.pi*np.random.rand()
             theta = np.arccos(-2.0*np.random.rand() + 1.0)        
-            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0})
+            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0, "fv":0})
             #print(t, ene, x, y, z)
 
         return event_list
@@ -128,9 +139,9 @@ class super_kamiokande(detector):
             cos = np.cos(theta)
             sin = np.sin(theta)
             z = (np.random.rand() - 0.5)*self.__height
-            
+        
             ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
-            
+
             #a = tools.interpolate_1d_array(ene, self.__bg_data[:,0], self.__a)
             pdf = self.__ar2*np.exp(self.__r2_outFV/self.__env_slope**2)
             r2 = tools.get_value_random(self.__r2_outFV, pdf)
@@ -139,7 +150,7 @@ class super_kamiokande(detector):
             y = np.sqrt(r2)*sin
             phi = 2.0*np.pi*np.random.rand()
             theta = np.arccos(-2.0*np.random.rand() + 1.0)
-            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0})
+            event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0, "fv":0})
             #print(t, ene, x, y, z)
 
         return event_list
@@ -171,13 +182,28 @@ class super_kamiokande(detector):
         bg_out_fv_top_bottom = self.generate_bg_out_fv_top_bottom(t_start, t_end)
         sn_ev = self.__ev_gen.get_events(t_start, t_end)
 
+        for ev in sn_ev:
+            theta = 2.0*np.pi*np.random.rand()
+            r = np.sqrt(np.random.rand()*((self.__diameter/2.0)**2))
+            x = r*np.cos(theta)
+            y = r*np.sin(theta)
+            z = (np.random.rand() - 0.5)*self.__height
+            ev["x"] = x
+            ev["y"] = y
+            ev["z"] = z
+            if(self.__check_FV(x,y,z)):
+                ev["fv"] = 1
+            else:
+                ev["fv"] = 0
+
+
         ev_list = []
         ev_list.extend(bg_in_fv)
         ev_list.extend(bg_out_fv_cylinder)
         ev_list.extend(bg_out_fv_top_bottom)
         ev_list.extend(sn_ev)
         for ev in ev_list:
-            print(ev["time"], ev["ev_ene"], ev["id"])
+            print(ev["time"], ev["ev_ene"], ev["x"], ev["y"], ev["x"], ev["id"], ev["fv"])
 
 if __name__ == "__main__":
     import sys
