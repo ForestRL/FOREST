@@ -57,10 +57,10 @@ class analytic_generator(event_generator):
             returns arrays of individual events
                 retrun array of events
         """
-        tot_start = 720.0*100*(-2.0/13)*(self.__volume/32.5)*(self.__distance/10.0)**(-2.0)*(self.__R/10.0)\
+        tot_start = 720.0*100*(-2.0/13)*(self.__volume/32.5)*(self.__distance/10.0)**(-2.0)*(self.__M/1.4)**(15./2.)*(self.__R/10.0)\
                 *(self.__gbeta/3.0)**(5.0)*((t_start+self.__t0)/100.0)**(-13.0/2)
 
-        tot_end = 720.0*100*(-2.0/13)*(self.__volume/32.5)*(self.__distance/10.0)**(-2.0)*(self.__R/10.0)\
+        tot_end = 720.0*100*(-2.0/13)*(self.__volume/32.5)*(self.__distance/10.0)**(-2.0)*(self.__M/1.4)**(15./2.)**(self.__R/10.0)\
                 *(self.__gbeta/3.0)**(5.0)*((t_end+self.__t0)/100.0)**(-13.0/2)
 
         t_center = (t_start + t_end)/2.0
