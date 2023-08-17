@@ -1,6 +1,6 @@
 from nu_reaction import nu_reaction
 import numpy as np
-
+import typing
 
 class inverse_beta_decay(nu_reaction):
     """ Inverse beta decay cross-section given by Strumia and Vissani"""
@@ -118,7 +118,7 @@ class inverse_beta_decay(nu_reaction):
         return cs
 
 
-    def cs_table_anue(self, n_cos:int=200, n_e:int=300, E_min:float=0.0, E_max:float=300) -> list[np.array]:
+    def cs_table_anue(self, n_cos:int=200, n_e:int=300, E_min:float=0.0, E_max:float=300) -> typing.List[np.array]:
         csdE = np.empty(n_e)
         dcsdEdcos = np.empty(n_e, n_cos)
 

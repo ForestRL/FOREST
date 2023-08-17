@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod, ABC
 import numpy as np
+import typing
 
 class nu_reaction(metaclass=ABCMeta):
     """Abstract class for calculating neutrino reactions"""
@@ -45,7 +46,7 @@ class nu_reaction(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def cs_table_anue(self, n_cos:int=200, n_e:int=300, E_min:float=0.0, E_max:float=300) -> list[np.array]:
+    def cs_table_anue(self, n_cos:int=200, n_e:int=300, E_min:float=0.0, E_max:float=300) -> typing.List[np.array]:
         pass
 
     @abstractmethod

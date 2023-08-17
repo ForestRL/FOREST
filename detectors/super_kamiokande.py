@@ -8,6 +8,7 @@ from nu_osc_model import nu_osc_model
 from nu_reactions.event_generator import event_generator
 from nu_reactions.analytic_generator import analytic_generator
 import tools
+import typing
 
 class super_kamiokande(detector):
     """Impelement for Super-Kamiokande"""
@@ -165,7 +166,7 @@ class super_kamiokande(detector):
         pass
 
 
-    def get_events(self, t_start:float, t_end:float) -> list[float]:
+    def get_events(self, t_start:float, t_end:float) -> typing.List[float]:
         bg_in_fv = self.generate_bg_in_fv(t_start, t_end)
         bg_out_fv_cylinder = self.generate_bg_out_fv_cylinder(t_start, t_end)
         bg_out_fv_top_bottom = self.generate_bg_out_fv_top_bottom(t_start, t_end)
@@ -191,7 +192,7 @@ if __name__ == "__main__":
 
 
  #   ev_gen = nu_event_generator(nu_osc, [ibd], [2.173e33], 200)
-    ev_gen_ana = analytic_generator()
+    ev_gen_ana = analytic_generator(M=2.0)
     sk = super_kamiokande(None, ev_gen_ana)
     times = np.linspace(0.01, 200, 20000)
     for time1, time2 in zip(times[1:], times[:-1]):
