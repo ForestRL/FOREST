@@ -25,3 +25,8 @@ class event_generator(metaclass=ABCMeta):
                 retrun array of events
         """
 
+    @abstractmethod
+    def get_react_names(self):
+        """
+                retrun array of reaction names
+        """

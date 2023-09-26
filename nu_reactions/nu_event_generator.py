@@ -15,6 +15,7 @@ class nu_event_generator:
         self.__kpc_cm = 3.086e21 # 1 kpc in cm
 
         self.__nu_osc_model = nu_osc
+        self.__nu_reacts = [nu_react.get_reaction_name() for nu_react in nu_reaction_list]
         self.__sn_spectra = nu_osc.get_sn_spectra()
         self.__nu_reaction_dict = {}
         self.__nu_target_dict = {}
@@ -112,30 +113,35 @@ class nu_event_generator:
 
     def get_events(self, t_start:float, t_end:float, react_names:typing.List[str]=[]):
         
+        event_list = []
         for i in range(3):
-            tot_start = self.get_tot_events(react_names[0], i, t_start)
-            tot_end = self.get_tot_events(react_names[0], i, t_end)
-            dn_exp = tot_end - tot_start
- 
-            dn = random.poisson(dn_exp, 1)
-            
-            times = np.random.rand(dn[0])*(t_end - t_start) + t_start
-            times.sort()
-            for t in times:
+            for react_name in react_names:
+                tot_start = self.get_tot_events(react_name, i, t_start)
+                tot_end = self.get_tot_events(react_name, i, t_end)
+                dn_exp = tot_end - tot_start
+                dn = random.poisson(dn_exp, 1)
+                times = np.random.rand(dn[0])*(t_end - t_start) + t_start
+                times.sort()
+                for t in times:
 
-                event_spectrum_t = tools.interpolate_2d_array(t, self.__sn_spectra.get_times(), self.__event_spectra[react_names[0]][i])
-                ene_bins_t = tools.interpolate_2d_array(t, self.__sn_spectra.get_times(), self.__ene_bins_all)
-                dcsdEdcos_t = tools.interpolate_3d_array(t, self.__sn_spectra.get_times(), self.__dcsdEdcos[react_names[0]][i])
+                    event_spectrum_t = tools.interpolate_2d_array(t, self.__sn_spectra.get_times(), self.__event_spectra[react_name][i])
+                    ene_bins_t = tools.interpolate_2d_array(t, self.__sn_spectra.get_times(), self.__ene_bins_all)
+                    dcsdEdcos_t = tools.interpolate_3d_array(t, self.__sn_spectra.get_times(), self.__dcsdEdcos[react_name][i])
 
-                ene = tools.get_value_random(ene_bins_t, event_spectrum_t)
-                dcs_dcos = tools.interpolate_2d_array(ene, ene_bins_t, dcsdEdcos_t)
-                cos = tools.get_value_random(self.__cos_list , dcs_dcos)
+                    ene = tools.get_value_random(ene_bins_t, event_spectrum_t)
+                    dcs_dcos = tools.interpolate_2d_array(ene, ene_bins_t, dcsdEdcos_t)
+                    cos = tools.get_value_random(self.__cos_list , dcs_dcos)
 
-                pid = self.__nu_reaction_dict[react_names[0]].get_PID1()
-                Ee = self.__nu_reaction_dict[react_names[0]].get_outgoing_particle_energy(cos, ene)
+                    pid = self.__nu_reaction_dict[react_name].get_PID1()
+                    Ee = self.__nu_reaction_dict[react_name].get_outgoing_particle_energy(cos, ene)
+                    phi = 2.0*np.pi*np.random.rand()
+                    theta = np.arccos(-2.0*np.random.rand() + 1.0)
+                    event_list.append({"time":t, "nu_ene":ene, "ev_ene":Ee, "phi":phi, "theta":theta, "id":pid})
 
-                print(t, ene, cos, Ee, pid)
-
+        return event_list
+    
+    def get_react_names(self):
+        return self.__nu_reacts
 
     def __init_cs_table(self):
         pass

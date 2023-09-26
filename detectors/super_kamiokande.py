@@ -181,8 +181,8 @@ class super_kamiokande(detector):
         bg_in_fv = self.generate_bg_in_fv(t_start, t_end)
         bg_out_fv_cylinder = self.generate_bg_out_fv_cylinder(t_start, t_end)
         bg_out_fv_top_bottom = self.generate_bg_out_fv_top_bottom(t_start, t_end)
-        sn_ev = self.__ev_gen.get_events(t_start, t_end)
-
+        sn_ev = self.__ev_gen.get_events(t_start, t_end, self.__ev_gen.get_react_names())
+        
         for ev in sn_ev:
             theta = 2.0*np.pi*np.random.rand()
             r = np.sqrt(np.random.rand()*((self.__diameter/2.0)**2))
@@ -216,10 +216,13 @@ if __name__ == "__main__":
     from inverse_beta_decay import inverse_beta_decay
     from nu_event_generator import nu_event_generator
 
-
- #   ev_gen = nu_event_generator(nu_osc, [ibd], [2.173e33], 200)
-    ev_gen_ana = analytic_generator(M=2.0)
-    sk = super_kamiokande(None, ev_gen_ana)
-    times = np.linspace(0.01, 200, 20000)
+    spectra = SNspectra("../z9.6_ver2_nuspectra_nonzero.dat")
+    nu_osc = MSW_normal(spectra)
+    ibd = inverse_beta_decay()
+    ev_gen = nu_event_generator(nu_osc, [ibd], [2.173e33], 200)
+ #   ev_gen_ana = analytic_generator(M=2.0)
+    sk = super_kamiokande(None, ev_gen)
+    times = spectra.get_times()
+    #times = np.linspace(0.01, 200, 20000)
     for time1, time2 in zip(times[1:], times[:-1]):
         sk.get_events(time2, time1)
