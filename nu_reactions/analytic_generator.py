@@ -2,16 +2,28 @@ import sys
 sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
 sys.path.append("..")
-from nu_osc_model import nu_osc_model
-from nu_reaction import nu_reaction
+from nu_osc_models.nu_osc_model import nu_osc_model
+from nu_reactions.nu_reaction import nu_reaction
 import numpy as np
 from numpy import random
 import tools
-from event_generator import event_generator
+from nu_reactions.event_generator import event_generator
 
 class analytic_generator(event_generator):
     def __init__(self, M:float=1.4, R:float=10.0, gbeta:float=3.0, etot:float=1.0e53,
-                  volume:float=32.5, distance:float=10.0):
+                  volume:float=32.48, distance:float=10.0):
+        """
+            Analytic supernova neutrino event generator. This class is based on  
+            Suwa et al. (2021) Progress of Theoretical and Experimental Physics, Volume 2021, Issue 1, id.013E01, 12 pp. 
+
+            Arguments
+              M: Neutron star mass in solar mass, 
+              R: Neutron star radius in solar radius,
+              gbeta: gbeta
+              etot: Total energy of neutrino in erg,
+              volume: Detector volume in kton,
+              distance: Supernova distance in kpc
+        """
         self.__M = M
         self.__R = R
         self.__volume = volume
@@ -78,6 +90,11 @@ class analytic_generator(event_generator):
             event_list.append({"time":time, "nu_ene":ene+1.3, "ev_ene":ene, "phi":phi, "theta":theta, "id":-11})
         return event_list
 
+
+    def get_react_names(self):
+        """
+                retrun array of reaction names
+        """
 
 if __name__ == "__main__":
 

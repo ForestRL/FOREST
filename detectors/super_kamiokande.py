@@ -1,10 +1,10 @@
-from detector import detector
+from detectors.detector import detector
 import numpy as np
 import sys
 sys.path.append("../")
 sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
-from nu_osc_model import nu_osc_model
+from nu_osc_models.nu_osc_model import nu_osc_model
 from nu_reactions.event_generator import event_generator
 from nu_reactions.analytic_generator import analytic_generator
 import tools
@@ -12,10 +12,11 @@ import typing
 
 class super_kamiokande(detector):
     """Impelement for Super-Kamiokande"""
-
+    VOLUME = 32.48 # SK inner volume in kton
+    
     def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator):
-        self.__height = 41.4
-        self.__diameter = 39.3
+        self.__height = 36.2
+        self.__diameter = 33.8
         self.__fv_distance = 2.0
         self.__n_protons = 2.173e33
         self.__env_slope = 10
@@ -80,7 +81,7 @@ class super_kamiokande(detector):
         event_list = []
 
         for t in times:
-            theta = 2*np.pi*np.random.rand()
+            theta = 2*np.pi*np.random.rand() - np.pi
             cos = np.cos(theta)
             sin = np.sin(theta)
             r = np.sqrt((self.__diameter/2 - self.__fv_distance)**2*np.random.rand())
@@ -105,7 +106,7 @@ class super_kamiokande(detector):
         event_list = []
 
         for t in times:
-            theta = 2*np.pi*np.random.rand()
+            theta = 2*np.pi*np.random.rand() - np.pi
             cos = np.cos(theta)
             sin = np.sin(theta)
             r2 = np.random.rand()*(self.__diameter/2)**2
@@ -136,7 +137,7 @@ class super_kamiokande(detector):
         times.sort()
         event_list = []
         for t in times:
-            theta = 2*np.pi*np.random.rand()
+            theta = 2*np.pi*np.random.rand() - np.pi
             cos = np.cos(theta)
             sin = np.sin(theta)
             z = (np.random.rand() - 0.5)*self.__height
@@ -203,8 +204,7 @@ class super_kamiokande(detector):
         ev_list.extend(bg_out_fv_cylinder)
         ev_list.extend(bg_out_fv_top_bottom)
         ev_list.extend(sn_ev)
-        for ev in ev_list:
-            print(ev["time"], ev["ev_ene"], ev["x"], ev["y"], ev["x"], ev["id"], ev["fv"])
+        return ev_list
 
 if __name__ == "__main__":
     import sys

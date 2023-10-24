@@ -3,7 +3,7 @@ import sys
 sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
 sys.path.append("..")
-from nu_osc_model import nu_osc_model
+from nu_osc_models.nu_osc_model import nu_osc_model
 from nu_reactions.event_generator import event_generator
 import typing
 
