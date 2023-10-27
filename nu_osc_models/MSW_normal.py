@@ -1,6 +1,6 @@
 import sys
 sys.path.append("../")
-from nu_osc_model import nu_osc_model
+from nu_osc_models.nu_osc_model import nu_osc_model
 from sn_spectra import SNspectra
 
 class MSW_normal(nu_osc_model):
@@ -8,7 +8,7 @@ class MSW_normal(nu_osc_model):
 
     def __init__(self, sn_spectra:SNspectra):
 
-        p = 1.0#0.69
+        p = 0.69
 
         self.__sn_spectra = sn_spectra
         self.__fluxes_nue   = sn_spectra.get_nue_number_spectra() # array of flux of nue

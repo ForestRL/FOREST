@@ -25,9 +25,9 @@ Nakazato format:
 
 import numpy as np
 import sys
+from spectra import spectra
 
-
-class SNspectra:
+class SNspectra(spectra):
     """ addresses neutrino spectra
     """
 

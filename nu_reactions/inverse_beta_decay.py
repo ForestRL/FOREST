@@ -1,4 +1,4 @@
-from nu_reaction import nu_reaction
+from nu_reactions.nu_reaction import nu_reaction
 import numpy as np
 import typing
 

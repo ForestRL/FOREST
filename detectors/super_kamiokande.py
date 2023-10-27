@@ -6,13 +6,13 @@ sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
 from nu_osc_models.nu_osc_model import nu_osc_model
 from nu_reactions.event_generator import event_generator
-from nu_reactions.analytic_generator import analytic_generator
 import tools
 import typing
 
 class super_kamiokande(detector):
     """Impelement for Super-Kamiokande"""
     VOLUME = 32.48 # SK inner volume in kton
+    PROTONS =  2.173e33
     
     def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator):
         self.__height = 36.2

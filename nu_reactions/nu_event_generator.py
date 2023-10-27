@@ -2,14 +2,15 @@ import sys
 sys.path.append("../nu_osc_models")
 sys.path.append("../nu_reactions")
 sys.path.append("..")
-from nu_osc_model import nu_osc_model
-from nu_reaction import nu_reaction
+from nu_osc_models.nu_osc_model import nu_osc_model
+from nu_reactions.nu_reaction import nu_reaction
+from nu_reactions.event_generator import event_generator
 import numpy as np
 from numpy import random
 import tools
 import typing
 
-class nu_event_generator:
+class nu_event_generator(event_generator):
     def __init__(self, nu_osc:nu_osc_model, nu_reaction_list:typing.List[nu_reaction], nu_target_list:typing.List[float], n_cos_res:int):
 
         self.__kpc_cm = 3.086e21 # 1 kpc in cm
@@ -71,16 +72,17 @@ class nu_event_generator:
 
         for nu_react in nu_reaction_list:
             
-            dN_dE_nue = nu_osc.get_number_spectra_anue()*self.__nu_target_dict[nu_react.get_reaction_name()]/(4.0*np.pi*self.__sn_spectra.get_distance()**2*self.__kpc_cm**2)\
+            dN_dE_nue = nu_osc.get_number_spectra_nue()*self.__nu_target_dict[nu_react.get_reaction_name()]/(4.0*np.pi*self.__sn_spectra.get_distance()**2*self.__kpc_cm**2)\
                                             *(self.__cs_ene[nu_react.get_reaction_name()][0][:,1:]+ self.__cs_ene[nu_react.get_reaction_name()][0][:,:-1])*0.5*self.__ene_widths
             dN_dE_anue = nu_osc.get_number_spectra_anue()*self.__nu_target_dict[nu_react.get_reaction_name()]/(4.0*np.pi*self.__sn_spectra.get_distance()**2*self.__kpc_cm**2)\
                                             *(self.__cs_ene[nu_react.get_reaction_name()][1][:,1:]+ self.__cs_ene[nu_react.get_reaction_name()][1][:,:-1])*0.5*self.__ene_widths
-            dN_dE_nux = nu_osc.get_number_spectra_anue()*self.__nu_target_dict[nu_react.get_reaction_name()]/(4.0*np.pi*self.__sn_spectra.get_distance()**2*self.__kpc_cm**2)\
+            dN_dE_nux = nu_osc.get_number_spectra_nux()*self.__nu_target_dict[nu_react.get_reaction_name()]/(4.0*np.pi*self.__sn_spectra.get_distance()**2*self.__kpc_cm**2)\
                                             *(self.__cs_ene[nu_react.get_reaction_name()][2][:,1:]+ self.__cs_ene[nu_react.get_reaction_name()][2][:,:-1])*0.5*self.__ene_widths
             
             self.__event_rates[nu_react.get_reaction_name()] = [np.sum(dN_dE_nue, axis=1),
                                                                 np.sum(dN_dE_anue, axis=1),
                                                                 np.sum(dN_dE_nux, axis=1)]
+        print(dN_dE_anue,self.__ene_widths)
 #            self.__cum_events[nu_react.get_reaction_name()] = self.__event_rates[nu_react.get_reaction_name()].cumsum()
 
 
