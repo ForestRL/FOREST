@@ -19,7 +19,7 @@ ev_format = "{0:d}\t{1:e}\t{2:e}\t{3:e}\t{4:e}\t{5:e}\t{6:e}\t{7:e}\t{8:e}\t{9:d
 def write_events(ev_list, output_file):
     text = ""
     text += "#FOREST version: " + forest_version + "\n"
-    text += "#Python version: " + sys.version + "\n"
+    text += "#Python version: " + sys.version.replace('\n', '') + "\n"
     text += "#"
     for cmd in sys.argv:
         text += cmd + " "
@@ -91,7 +91,7 @@ if __name__ == "__main__":
             print('Not implemented with hyperk yet.')
             sys.exit(0)
         
-        start_time = 0.0
+        start_time = gen.get_t0()
         end_time = args.end_time
         times = np.arange(start_time, end_time, 0.01)
 

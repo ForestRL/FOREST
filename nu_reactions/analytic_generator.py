@@ -44,6 +44,8 @@ class analytic_generator(event_generator):
         rate = 720.*(self.__volume/32.5)*(self.__distance/10.)**(-2.)*(self.__R/10.)\
                 *(self.__gbeta/3.)**(5.)*((t+self.__t0)/100.)**(-15./2)
 
+    def get_t0(self)->float:
+        return self.__t0
 
     def get_eventrate(self, react_name:str):
         """
