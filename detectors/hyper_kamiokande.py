@@ -9,18 +9,16 @@ from nu_reactions.event_generator import event_generator
 import tools
 import typing
 
-class super_kamiokande(detector):
-    """Impelement for Super-Kamiokande"""
-    VOLUME = 32.48 # SK inner volume in kton
-    PROTONS =  2.173e33
+class hyper_kamiokande(detector):
+    """Impelement for Hyper-Kamiokande"""
+    VOLUME = 246.3 #32.48 # HK inner volume in kton
+    PROTONS =  1.65e34
     
     def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator):
-        self.__height = 36.2
-        self.__diameter = 33.8
+        self.__height = 70
+        self.__diameter = 56
         self.__fv_distance = 2.0
-        self.__n_protons = 2.173e33
         self.__env_slope = 10
-        self.__env_center = 39.3
 
         self.__full_volume = np.pi*(self.__diameter/2.0)**2*self.__height
         self.__top_bottom_volume = np.pi*(self.__diameter/2.0)**2*(2*self.__fv_distance)

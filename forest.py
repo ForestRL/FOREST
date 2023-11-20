@@ -9,6 +9,7 @@ from nu_osc_models.no_osc import no_osc
 from nu_osc_models.MSW_normal import MSW_normal
 from nu_osc_models.MSW_inverted import MSW_inverted
 from detectors.super_kamiokande import super_kamiokande
+from detectors.hyper_kamiokande import hyper_kamiokande
 from analytic_spectra import analytic_spectra
 from sn_spectra import SNspectra
 
@@ -88,8 +89,9 @@ if __name__ == "__main__":
             gen = analytic_generator(args.pns_m, args.pns_r, args.gbeta, args.etot, volume, args.distance)
             detector = super_kamiokande(None, gen)
         elif argparse.detector == 'hyperk':
-            print('Not implemented with hyperk yet.')
-            sys.exit(0)
+            volume = hyper_kamiokande
+            gen = analytic_generator(args.pns_m, args.pns_r, args.gbeta, args.etot, volume, args.distance)
+            detector = hyper_kamiokande(None, gen)
         
         start_time = gen.get_t0()
         end_time = args.end_time

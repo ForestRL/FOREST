@@ -82,7 +82,7 @@ class nu_event_generator(event_generator):
             self.__event_rates[nu_react.get_reaction_name()] = [np.sum(dN_dE_nue, axis=1),
                                                                 np.sum(dN_dE_anue, axis=1),
                                                                 np.sum(dN_dE_nux, axis=1)]
-        print(dN_dE_anue,self.__ene_widths)
+
 #            self.__cum_events[nu_react.get_reaction_name()] = self.__event_rates[nu_react.get_reaction_name()].cumsum()
 
 

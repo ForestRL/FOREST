@@ -10,8 +10,8 @@ def get_value_random(x_list, pdf)->float:
 
     if(np.sum(pdf) < 1.0e-100):
         return 0.0
-
-    cum_y = np.cumsum(pdf)
+    dx = x_list[1:] - x_list[:-1]
+    cum_y = np.cumsum(pdf[:-1]*dx)
     max_y = cum_y[-1]
 
     normal_cum_y = cum_y/max_y
