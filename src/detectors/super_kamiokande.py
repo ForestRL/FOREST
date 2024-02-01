@@ -19,7 +19,7 @@ class super_kamiokande(detector):
         self.__diameter = 33.8
         self.__fv_distance = 2.0
         self.__n_protons = 2.173e33
-        self.__env_slope = 10
+        self.__env_slope = 5
         self.__env_center = 39.3
 
         self.__full_volume = np.pi*(self.__diameter/2.0)**2*self.__height
@@ -38,7 +38,7 @@ class super_kamiokande(detector):
         self.__bin_lowedges = self.__bg_data[:,0] - self.__bin_width
         self.__bin_highedges = self.__bg_data[:,0] + self.__bin_width
 
-        self.__r2_outFV = np.linspace((self.__diameter/2.0 - self.__fv_distance)**2, self.__diameter/2.0**2, 200)
+        self.__r2_outFV = np.linspace((self.__diameter/2.0 - self.__fv_distance)**2, (self.__diameter/2.0)**2, 200)
         self.__z_outFV_p = np.linspace( self.__height/2.0-self.__fv_distance, self.__height/2.0, 200)
 
         self.__make_envelope()
@@ -46,7 +46,7 @@ class super_kamiokande(detector):
 
     def __make_envelope(self):
 
-        r_fv2 = (self.__diameter - self.__fv_distance)**2
+        r_fv2 = (self.__diameter/2.0 - self.__fv_distance)**2
         r_wall2 = self.__diameter**2
         s2 = self.__env_slope**2
         top_wall = self.__height/2.0
@@ -114,7 +114,7 @@ class super_kamiokande(detector):
             ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
             
             pdf = self.__az*np.exp(self.__z_outFV_p/self.__env_slope)
-            z = tools.get_value_random(self.__r2_outFV, pdf)
+            z = tools.get_value_random(self.__z_outFV_p, pdf)
             z *= np.random.choice([1,-1])
 
             x = np.sqrt(r2)*cos
@@ -123,7 +123,7 @@ class super_kamiokande(detector):
             phi = 2.0*np.pi*np.random.rand()
             theta = np.arccos(-2.0*np.random.rand() + 1.0)        
             event_list.append({"time":t, "ev_ene":ene, "nu_ene":0.0, "theta":theta, "phi":phi, "x":x, "y":y, "z":z, "id":0, "fv":0})
-            #print(t, ene, x, y, z)
+#            print(t, ene, x, y, z)
 
         return event_list
 

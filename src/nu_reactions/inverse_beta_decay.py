@@ -151,6 +151,10 @@ class inverse_beta_decay(nu_reaction):
         epsilon = Enu/self.__mp
         d = (self.__mn**2 - self.__mp**2 - self.__me**2)/2.0e0/self.__mp
         kappa = (1 + epsilon)**2 - (epsilon*cos)**2
+        
+        if ((Enu - d)**2 - self.__me**2*kappa < 0.0):
+            return 0.0
+        
         Ee = ((Enu - d)*(1 + epsilon) 
               + epsilon*cos*np.sqrt((Enu - d)**2 - self.__me**2*kappa))/kappa
         return Ee

@@ -28,21 +28,20 @@ def write_events(ev_list, output_file):
     text += "#Seed: " + str(seed) + "\n"
     text += ""
     
-
+    count = 0
     if(output_file != None):
         with open(output_file, "w") as f:
             f.write(text)
-            count = 0
             for index, ev_line in enumerate(ev_list):
-                if(ev_line[time] > args.start_time):
+                if(ev_line["time"] > args.start_time):
                     count += 1
                     f.write(ev_format.format(count, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
                                               ev_line["theta"], ev_line["phi"], ev_line["x"], ev_line["y"], ev_line["z"], ev_line["id"], ev_line["fv"]))
     else:
          for index, ev_line in enumerate(ev_list):
-                if(ev_line[time] > args.start_time):
+                if(ev_line["time"] > args.start_time):
                     count += 1
-                    print(ev_format.format(index, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
+                    print(ev_format.format(count, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
                                               ev_line["theta"], ev_line["phi"], ev_line["x"], ev_line["y"], ev_line["z"], ev_line["id"], ev_line["fv"]),end='')        
 
 

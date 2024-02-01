@@ -32,7 +32,7 @@ class analytic_generator(event_generator):
         self.__etot = etot
 
         self.__t0  = 210.e0*(M/1.4e0)**1.2/(R/10.e0)**1.2*(gbeta/3.e0)**0.8/(etot/1.e52)**0.2
-        self.__enes = np.linspace(0.01, 100, 200)
+        self.__enes = np.linspace(0.01, 100, 1000)
 
 
     def __get_eventrate_t(self, t:float):
