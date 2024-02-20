@@ -14,7 +14,7 @@ class hyper_kamiokande(detector):
     VOLUME = 246.3 # HK inner volume in kton
     PROTONS =  1.65e34
     
-    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator):
+    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator, background:bool=True, ene_cut:float=4.5):
         self.__height = 72
         self.__diameter = 58
         self.__fv_distance = 2.0
@@ -29,8 +29,13 @@ class hyper_kamiokande(detector):
 
         self.__ev_gen = ev_gen
 
-        self.__bg_data = np.loadtxt("sk_bg.dat") # factor *10?
+        self.__bg_data = np.loadtxt("sk_bg_extra_ver2.dat") # factor *10?
 
+        self.__bg_data[:,1:] = np.where(self.__bg_data[:,1:] > 1e-100, self.__bg_data[:,1:], 1e-100)
+        if(not background):
+            self.__bg_data[:,1:] = 1e-100
+        
+        self.__bg_data = self.__bg_data[self.__bg_data[:,0] < ene_cut]
         self.__bg_data[:,1:] = np.where(self.__bg_data[:,1:] > 1e-100, self.__bg_data[:,1:], 1e-100)
         self.__bin_width = self.__bg_data[1,0] - self.__bg_data[0,0] 
         self.__bin_lowedges = self.__bg_data[:,0] - self.__bin_width
@@ -109,7 +114,7 @@ class hyper_kamiokande(detector):
             sin = np.sin(theta)
             r2 = np.random.rand()*(self.__diameter/2)**2
             
-            ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
+            ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,3])
             
             pdf = self.__az*np.exp(self.__z_outFV_p/self.__env_slope)
             z = tools.get_value_random(self.__r2_outFV, pdf)
@@ -140,7 +145,7 @@ class hyper_kamiokande(detector):
             sin = np.sin(theta)
             z = (np.random.rand() - 0.5)*self.__height
         
-            ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,1])
+            ene = tools.get_value_random_hist(self.__bin_lowedges, self.__bin_highedges, self.__bg_data[:,3])
 
             #a = tools.interpolate_1d_array(ene, self.__bg_data[:,0], self.__a)
             pdf = self.__ar2*np.exp(self.__r2_outFV/self.__env_slope**2)

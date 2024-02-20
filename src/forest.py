@@ -33,15 +33,15 @@ def write_events(ev_list, output_file):
         with open(output_file, "w") as f:
             f.write(text)
             for index, ev_line in enumerate(ev_list):
-                if(ev_line["time"] > args.start_time):
+                if(ev_line["time"] > args.start_time and ev_line["ev_ene"] > args.ene_cut):
                     count += 1
                     f.write(ev_format.format(count, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
                                               ev_line["theta"], ev_line["phi"], ev_line["x"], ev_line["y"], ev_line["z"], ev_line["id"], ev_line["fv"]))
     else:
          for index, ev_line in enumerate(ev_list):
-                if(ev_line["time"] > args.start_time):
+                if(ev_line["time"] > args.start_time and ev_line["ev_ene"] > args.ene_cut):
                     count += 1
-                    print(ev_format.format(count, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
+                    print(ev_format.format(index, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
                                               ev_line["theta"], ev_line["phi"], ev_line["x"], ev_line["y"], ev_line["z"], ev_line["id"], ev_line["fv"]),end='')        
 
 
@@ -67,6 +67,8 @@ if __name__ == "__main__":
     parser.add_argument('-gbeta', help='gbeta',required=False, default=3.0, type=float)
     parser.add_argument('-end_time', help='End time of neutrino emission for the analytic supernova model in second',required=False, default=100, type=float)
     parser.add_argument('-start_time', help='Start time of event generation',required=False,default=0,type=float)
+    parser.add_argument('-ene_cut', help='Energy cut for events',required=False, default=4.5, type=float)
+    parser.add_argument('-bg', help='Detector background ON or OFF',required=False, default=True, type=bool)
     parser.add_argument('-spectra_file', help='Neutrino spectra file',required=False, type=str)
     parser.add_argument('-distance', default=10.0, type=float, required=True)
     parser.add_argument('-detector',choices=['superk', 'hyperk'], type=str, required=True)
@@ -92,11 +94,11 @@ if __name__ == "__main__":
         if args.detector == 'superk':
             volume = super_kamiokande.VOLUME
             gen = analytic_generator(args.pns_m, args.pns_r, args.gbeta, args.etot, volume, args.distance)
-            detector = super_kamiokande(None, gen)
+            detector = super_kamiokande(None, gen, args.bg, args.ene_cut)
         elif args.detector == 'hyperk':
             volume = hyper_kamiokande.VOLUME
             gen = analytic_generator(args.pns_m, args.pns_r, args.gbeta, args.etot, volume, args.distance)
-            detector = hyper_kamiokande(None, gen)
+            detector = hyper_kamiokande(None, gen, args.bg, args.ene_cut)
         
         start_time = 0.0#gen.get_t0()
         end_time = args.end_time
@@ -109,11 +111,11 @@ if __name__ == "__main__":
         if args.detector == 'superk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [super_kamiokande.PROTONS], 200)
-            detector = super_kamiokande(flux_earth, gen)
+            detector = super_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
         elif args.detector == 'hyperk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [hyper_kamiokande.PROTONS], 200)
-            detector = hyper_kamiokande(flux_earth, gen)
+            detector = hyper_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
             
     elif args.model == 'numerical_spectra':
         spectra = SNspectra(args.spectra_file, args.distance)
@@ -128,11 +130,11 @@ if __name__ == "__main__":
         if args.detector == 'superk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [super_kamiokande.PROTONS], 200)
-            detector = super_kamiokande(flux_earth, gen)
+            detector = super_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
         elif args.detector == 'hyperk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [hyper_kamiokande.PROTONS], 200)
-            detector = hyper_kamiokande(flux_earth, gen)
+            detector = hyper_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
 
 
     print('Generting events:\n')
