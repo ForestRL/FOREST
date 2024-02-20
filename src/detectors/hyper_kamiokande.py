@@ -35,6 +35,8 @@ class hyper_kamiokande(detector):
         if(not background):
             self.__bg_data[:,1:] = 1e-100
         
+        self.__bg_data = self.__bg_data[self.__bg_data[:,0] >= ene_cut]
+
         self.__bg_data = self.__bg_data[self.__bg_data[:,0] < ene_cut]
         self.__bg_data[:,1:] = np.where(self.__bg_data[:,1:] > 1e-100, self.__bg_data[:,1:], 1e-100)
         self.__bin_width = self.__bg_data[1,0] - self.__bg_data[0,0] 
