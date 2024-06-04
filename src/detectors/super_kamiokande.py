@@ -36,11 +36,11 @@ class super_kamiokande(detector):
         self.__bg_data[:,1:] = np.where(self.__bg_data[:,1:] > 1e-100, self.__bg_data[:,1:], 1e-100)
         if(not background):
             self.__bg_data[:,1:] = 1e-100
-        
-        self.sum_in = self.__bg_data[:,1].sum()
-        self.sum_out = self.__bg_data[:,3].sum()
 
         self.__bg_data = self.__bg_data[self.__bg_data[:,0] >= ene_cut]
+
+        self.__sum_in = self.__bg_data[:,1].sum()
+        self.__sum_out = self.__bg_data[:,3].sum()
 
         self.__bin_width = self.__bg_data[1,0] - self.__bg_data[0,0] 
         self.__bin_lowedges = self.__bg_data[:,0] - self.__bin_width
@@ -49,24 +49,23 @@ class super_kamiokande(detector):
         self.__r2_outFV = np.linspace((self.__diameter/2.0 - self.__fv_distance)**2, (self.__diameter/2.0)**2, 200)
         self.__z_outFV_p = np.linspace( self.__height/2.0-self.__fv_distance, self.__height/2.0, 200)
 
-        self.__make_envelope2()
+        self.__make_envelope()
     
 
     def __make_envelope(self):
-
         r_fv2 = (self.__diameter/2.0 - self.__fv_distance)**2
         r_wall2 = self.__diameter**2
-        s2 = self.__env_slope**2
+        a_cy = 1.0/5**2
         top_wall = self.__height/2.0
         top_fv = self.__height/2.0 - self.__fv_distance
 
-        ar2 = 1.0/(s2*(np.exp(r_wall2/s2)-np.exp(r_fv2/s2)))
-        self.__ar2 = ar2
-        self.__pdf_slinder = self.__ar2*np.exp(self.__r2_outFV/self.__env_slope**2)
+        a_top = 1.5
 
-        az = 1.0/(self.__env_slope*(np.exp(top_wall/self.__env_slope)-np.exp(top_fv/self.__env_slope)))
-        self.__az = az
-        self.__pdf_top_bottom = self.__az*np.exp(self.__z_outFV_p/self.__env_slope)
+        c_cy = a_cy/(np.exp(a_cy*r_wall2)-np.exp(a_cy*r_fv2))
+        self.__pdf_slinder = c_cy*np.exp(self.__r2_outFV*a_cy)
+
+        c_top = a_top/(np.exp(a_top*top_wall)-np.exp(a_top*top_fv))
+        self.__pdf_top_bottom = c_top*np.exp(a_top*self.__z_outFV_p)
 
 
     def __make_envelope2(self):         
@@ -86,8 +85,8 @@ class super_kamiokande(detector):
         c0 = (1.0 - c1*(top_wall - top_fv))/f_int 
 
         self.__pdf_top_bottom = c0*np.tanh((self.__z_outFV_p - top_fv)/self.__env_slope)
-
-
+        
+        
     def __bg_model_func(self, a, x):
         return a*np.exp(x/self.__env_slope**2)
 
