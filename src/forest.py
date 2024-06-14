@@ -68,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument('-end_time', help='End time of neutrino emission for the analytic supernova model in second',required=False, default=100, type=float)
     parser.add_argument('-start_time', help='Start time of event generation',required=False,default=0,type=float)
     parser.add_argument('-ene_cut', help='Energy cut for events',required=False, default=4.5, type=float)
-    parser.add_argument('-bg', help='Detector background ON or OFF',required=False, default=True, type=bool)
+    parser.add_argument('-bg', help='Detector background ON or OFF',required=False, default=False, action='store_true')
     parser.add_argument('-spectra_file', help='Neutrino spectra file',required=False, type=str)
     parser.add_argument('-distance', default=10.0, type=float, required=True)
     parser.add_argument('-detector',choices=['superk', 'hyperk'], type=str, required=True)
