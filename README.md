@@ -1,6 +1,8 @@
 # FOREST
 FORcasting Events from Supernovae Theoretical modeling (FOREST)
 
+### Ouput format
+    Ev#, time[s], Ev ene[MeV], Nu ene[MeV], theta, phi, x, y, z, Ev id, FV
 
 ## Examples
 
