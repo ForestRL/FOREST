@@ -14,13 +14,18 @@ class super_kamiokande(detector):
     VOLUME = 32.48 # SK inner volume in kton
     PROTONS =  2.173e33
     
-    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator, background:bool=True, ene_cut:float=4.5):
+    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator, background:bool=True, ene_cut:float=4.5, ene_res:bool=False):
         self.__height = 36.2
         self.__diameter = 33.8
         self.__fv_distance = 2.0
         self.__n_protons = 2.173e33
         self.__env_slope = 5
         self.__env_center = 39.3
+        
+        if(ene_res):
+            self.__ene_resolution = 1.5 # Mori et al. (2022)
+        else:
+            self.__ene_resolution = 0.0
 
         self.__full_volume = np.pi*(self.__diameter/2.0)**2*self.__height
         self.__top_bottom_volume = np.pi*(self.__diameter/2.0)**2*(2*self.__fv_distance)
@@ -222,6 +227,12 @@ class super_kamiokande(detector):
             ev["x"] = x
             ev["y"] = y
             ev["z"] = z
+
+            ev["ev_ene"] = np.random.normal(ev["ev_ene"], self.__ene_resolution)
+            
+            if(ev["ev_ene"] < 0):
+                ev["ev_ene"] = 0.0
+
             if(self.__check_FV(x,y,z)):
                 ev["fv"] = 1
             else:

@@ -69,6 +69,7 @@ if __name__ == "__main__":
     parser.add_argument('-start_time', help='Start time of event generation',required=False,default=0,type=float)
     parser.add_argument('-ene_cut', help='Energy cut for events',required=False, default=4.5, type=float)
     parser.add_argument('-bg', help='Detector background ON or OFF',required=False, default=False, action='store_true')
+    parser.add_argument('-ene_res', help='Detector energy resolution ON or OFF',required=False, default=False, action='store_true')
     parser.add_argument('-spectra_file', help='Neutrino spectra file',required=False, type=str)
     parser.add_argument('-distance', default=10.0, type=float, required=True)
     parser.add_argument('-detector',choices=['superk', 'hyperk'], type=str, required=True)
@@ -111,11 +112,11 @@ if __name__ == "__main__":
         if args.detector == 'superk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [super_kamiokande.PROTONS], 200)
-            detector = super_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
+            detector = super_kamiokande(flux_earth, gen, args.bg, args.ene_cut, args.ene_res)
         elif args.detector == 'hyperk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [hyper_kamiokande.PROTONS], 200)
-            detector = hyper_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
+            detector = hyper_kamiokande(flux_earth, gen, args.bg, args.ene_cut, args.ene_res)
             
     elif args.model == 'numerical_spectra':
         spectra = SNspectra(args.spectra_file, args.distance)
@@ -130,11 +131,11 @@ if __name__ == "__main__":
         if args.detector == 'superk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [super_kamiokande.PROTONS], 200)
-            detector = super_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
+            detector = super_kamiokande(flux_earth, gen, args.bg, args.ene_cut, args.ene_res)
         elif args.detector == 'hyperk':
             ibd = inverse_beta_decay()
             gen = nu_event_generator(flux_earth, [ibd], [hyper_kamiokande.PROTONS], 200)
-            detector = hyper_kamiokande(flux_earth, gen, args.bg, args.ene_cut)
+            detector = hyper_kamiokande(flux_earth, gen, args.bg, args.ene_cut, args.ene_res)
 
 
     print('Generting events:\n')

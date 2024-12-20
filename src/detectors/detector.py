@@ -11,7 +11,7 @@ class detector(metaclass=ABCMeta):
     """Abstract class for detectors"""
 
     @abstractmethod
-    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator, background:bool=True, ene_cut:float=0.0):
+    def __init__(self, nu_osc:nu_osc_model, ev_gen:event_generator, background:bool=True, ene_cut:float=0.0, ene_res:bool=False):
         pass
 
 
