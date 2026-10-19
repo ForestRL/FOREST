@@ -39,13 +39,24 @@ class nu_event_generator(event_generator):
         cos_list = np.linspace(-1.0, 1.0, n_cos_res)
         self.__cos_list = cos_list
 
+        # dcs_cos_* は (n_cos, n_time, n_ene) の巨大な一時配列を作るので、時刻方向にチャンクして
+        # あらかじめ確保した (n_time, n_ene, n_cos) 配列に詰める
+        n_time, n_ene = self.__ene_bins_all.shape
+        rows = max(1, int(128e6 // (n_cos_res*n_ene*8*25)))
+
+        def build_dcsdEdcos(dcs_func):
+            table = np.empty((n_time, n_ene, n_cos_res))
+            for i in range(0, n_time, rows):
+                table[i:i+rows] = dcs_func(self.__ene_bins_all[i:i+rows], cos_list).transpose(1,2,0)
+            return table
+
         for nu_react in nu_reaction_list:
             self.__cs_ene[nu_react.get_reaction_name()] = [nu_react.cs_nue(self.__ene_bins_all),
                                                             nu_react.cs_anue(self.__ene_bins_all),
                                                             nu_react.cs_nux(self.__ene_bins_all)]
-            self.__dcsdEdcos[nu_react.get_reaction_name()] = [nu_react.dcs_cos_nue(self.__ene_bins_all, cos_list).transpose(1,2,0),
-                                                              nu_react.dcs_cos_anue(self.__ene_bins_all, cos_list).transpose(1,2,0),
-                                                              nu_react.dcs_cos_nux(self.__ene_bins_all, cos_list).transpose(1,2,0)]
+            self.__dcsdEdcos[nu_react.get_reaction_name()] = [build_dcsdEdcos(nu_react.dcs_cos_nue),
+                                                              build_dcsdEdcos(nu_react.dcs_cos_anue),
+                                                              build_dcsdEdcos(nu_react.dcs_cos_nux)]
 
 
         self.__event_spectra = {}
@@ -83,7 +94,10 @@ class nu_event_generator(event_generator):
                                                                 np.sum(dN_dE_anue, axis=1),
                                                                 np.sum(dN_dE_nux, axis=1)]
 
-#            self.__cum_events[nu_react.get_reaction_name()] = self.__event_rates[nu_react.get_reaction_name()].cumsum()
+            time = self.__sn_spectra.get_times()
+            self.__cum_events[nu_react.get_reaction_name()] = [
+                np.append(0.0, np.cumsum((rate[1:] + rate[:-1])*(time[1:] - time[:-1])*0.5))
+                for rate in self.__event_rates[nu_react.get_reaction_name()]]
 
 
     def get_eventrate(self, react_name:str):
@@ -97,9 +111,7 @@ class nu_event_generator(event_generator):
 
     def get_tot_events(self, react_name:str, flavor:int, t_end:float):
         time = self.__sn_spectra.get_times()
-
-        rate = self.__event_rates[react_name][flavor]
-        cum_events = np.append(0.0, np.cumsum((rate[1:] + rate[:-1])*(time[1:] - time[:-1])*0.5))
+        cum_events = self.__cum_events[react_name][flavor]
 
         if(t_end >= time[-1]):
             return cum_events[-1]
@@ -109,7 +121,8 @@ class nu_event_generator(event_generator):
         time_1 = time[max_i]
         time_2 = time[max_i + 1]
 
-        return (cum_events[max_i+1] - cum_events[max_i])*(time_2 - time_1)*(t_end - time_1) \
+        # 累積イベント数の線形補間 (傾き = 差分 / 時間幅)
+        return (cum_events[max_i+1] - cum_events[max_i])/(time_2 - time_1)*(t_end - time_1) \
                 + cum_events[max_i]
 
 

@@ -17,44 +17,57 @@ forest_version = "1.0.0"
 ev_format = "{0:d}\t{1:e}\t{2:e}\t{3:e}\t{4:e}\t{5:e}\t{6:e}\t{7:e}\t{8:e}\t{9:d}\t{10:d}\n"  #ev_no, time[s], en_ene [MeV], nu_eve [MeV], theta, phi, x [cm], y [cm], z [cm], event id, fv 
 
 
-def write_events(ev_list, output_file):
-    text = ""
-    text += "#FOREST version: " + forest_version + "\n"
+def make_header():
+    text = "#FOREST version: " + forest_version + "\n"
     text += "#Python version: " + sys.version.replace('\n', '') + "\n"
     text += "#"
     for cmd in sys.argv:
         text += cmd + " "
     text += "\n"
     text += "#Seed: " + str(seed) + "\n"
-    text += ""
-    
-    count = 0
-    if(output_file != None):
-        with open(output_file, "w") as f:
-            f.write(text)
-            for index, ev_line in enumerate(ev_list):
-                if(ev_line["time"] > args.start_time and ev_line["ev_ene"] > args.ene_cut):
-                    count += 1
-                    f.write(ev_format.format(count, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
+    return text
+
+
+class EventWriter:
+    """Writes events slice by slice so that the whole event list never has to live in memory."""
+
+    def __init__(self, output_file):
+        self.__file = open(output_file, "w") if output_file != None else None
+        self.__count = 0  # events written so far (file mode numbering)
+        self.__index = 0  # position in the unfiltered stream (stdout mode numbering, as before)
+        if self.__file != None:
+            self.__file.write(make_header())
+
+    def write(self, ev_list):
+        lines = []
+        for ev_line in ev_list:
+            if(ev_line["time"] > args.start_time and ev_line["ev_ene"] > args.ene_cut):
+                self.__count += 1
+                ev_no = self.__count if self.__file != None else self.__index
+                lines.append(ev_format.format(ev_no, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
                                               ev_line["theta"], ev_line["phi"], ev_line["x"], ev_line["y"], ev_line["z"], ev_line["id"], ev_line["fv"]))
-    else:
-         for index, ev_line in enumerate(ev_list):
-                if(ev_line["time"] > args.start_time and ev_line["ev_ene"] > args.ene_cut):
-                    count += 1
-                    print(ev_format.format(index, ev_line["time"], ev_line["ev_ene"], ev_line["nu_ene"],
-                                              ev_line["theta"], ev_line["phi"], ev_line["x"], ev_line["y"], ev_line["z"], ev_line["id"], ev_line["fv"]),end='')        
+            self.__index += 1
+        if self.__file != None:
+            self.__file.writelines(lines)
+        else:
+            sys.stdout.writelines(lines)
+
+    def close(self):
+        if self.__file != None:
+            self.__file.close()
 
 
-
-def gen_events(times):
-    event_list = []
+def gen_events(times, writer):
+    n_events = 0
     pre_output_ev = 0
     for time1, time2 in zip(times[:-1], times[1:]):
-        event_list.extend(detector.get_events(time1, time2))
-        if(len(event_list)%100 == 0 and len(event_list) != pre_output_ev):
-            pre_output_ev = len(event_list)
-            print("Events number: ", len(event_list)//100*100)
-    return event_list
+        events = detector.get_events(time1, time2)
+        writer.write(events)
+        n_events += len(events)
+        if(n_events//100 != pre_output_ev//100):
+            pre_output_ev = n_events
+            print("Events number: ", n_events//100*100, file=sys.stderr)
+    return n_events
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='forest',
@@ -139,7 +152,8 @@ if __name__ == "__main__":
 
 
     print('Generting events:\n')
-    ev_list = gen_events(times)
-    write_events(ev_list,args.o)
+    writer = EventWriter(args.o)
+    gen_events(times, writer)
+    writer.close()
     
     sys.exit()

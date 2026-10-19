@@ -211,58 +211,33 @@ class SNspectra(spectra):
 
         self.__distance = distance 
 
-        self.__times = np.empty((0)) # array of Tn
         self.__n_ene_bin = 20 # number of energy bins
-        self.__ene1_bins = np.empty((0, self.__n_ene_bin)) # array of first energy bins
-        self.__ene2_bins = np.empty((0, self.__n_ene_bin)) # array of second energy bins
-        self.__fluxes_nue   = np.empty((0, self.__n_ene_bin)) # array of flux of nue
-        self.__fluxes_anue  = np.empty((0, self.__n_ene_bin)) # array of flux of anue
-        self.__fluxes_nux   = np.empty((0, self.__n_ene_bin)) # array of flux of nux
-        self.__lums_nue     = np.empty((0, self.__n_ene_bin)) # array of luminosity of nue
-        self.__lums_anue    = np.empty((0, self.__n_ene_bin)) # array of luminosity of anue
-        self.__lums_nux     = np.empty((0, self.__n_ene_bin)) # array of luminosity of nux
 
+        # 1 時刻ぶん = 時刻行 + エネルギービン20行 + 空行。ブロック単位で読み、最後に一度だけ配列化する
+        # (np.vstack/np.hstack を毎ステップ呼ぶと全データのコピーが N 回走り O(N^2) になる)
+        times = []
+        blocks = []
         with open(spectrum_file, mode='r') as f:
-            
             while True:
                 line = f.readline()
                 if line == '':
                     break
 
-                time = float(line)
-                self.__times = np.hstack((self.__times, np.array((time))))
-                
-                ene1_bin = []
-                ene2_bin = []
-                flux_nue  = []
-                flux_anue = []
-                flux_nux  = []
-                lum_nue   = []
-                lum_anue  = []
-                lum_nux   = []
-
-                for i in range(self.__n_ene_bin):
-                    data = f.readline().split()
-                    
-                    ene1_bin.append(float(data[0]))
-                    ene2_bin.append(float(data[1]))
-                    flux_nue.append(float(data[2]))
-                    flux_anue.append(float(data[3]))
-                    flux_nux.append(float(data[4]))
-                    lum_nue.append(float(data[5]))
-                    lum_anue.append(float(data[6]))
-                    lum_nux.append(float(data[7]))
-
-                self.__ene1_bins = np.vstack((self.__ene1_bins, np.array(ene1_bin)))
-                self.__ene2_bins = np.vstack((self.__ene2_bins, np.array(ene2_bin)))
-                self.__fluxes_nue = np.vstack((self.__fluxes_nue, np.array(flux_nue)))
-                self.__fluxes_anue = np.vstack((self.__fluxes_anue, np.array(flux_anue)))
-                self.__fluxes_nux = np.vstack((self.__fluxes_nux, np.array(flux_nux)))
-                self.__lums_nue = np.vstack((self.__lums_nue, np.array(lum_nue)))
-                self.__lums_anue = np.vstack((self.__lums_anue, np.array(lum_anue)))
-                self.__lums_nux = np.vstack((self.__lums_nux, np.array(lum_nux)))
-
+                times.append(float(line))
+                rows = [f.readline().split() for _ in range(self.__n_ene_bin)]
+                blocks.append(np.array(rows, dtype=float)) # shape (n_ene_bin, 8)
                 f.readline()
+
+        self.__times = np.array(times)
+        data = np.array(blocks) # shape (n_time, n_ene_bin, 8)
+        self.__ene1_bins    = np.ascontiguousarray(data[:, :, 0])
+        self.__ene2_bins    = np.ascontiguousarray(data[:, :, 1])
+        self.__fluxes_nue   = np.ascontiguousarray(data[:, :, 2])
+        self.__fluxes_anue  = np.ascontiguousarray(data[:, :, 3])
+        self.__fluxes_nux   = np.ascontiguousarray(data[:, :, 4])
+        self.__lums_nue     = np.ascontiguousarray(data[:, :, 5])
+        self.__lums_anue    = np.ascontiguousarray(data[:, :, 6])
+        self.__lums_nux     = np.ascontiguousarray(data[:, :, 7])
 
 
 # If launched in command line
